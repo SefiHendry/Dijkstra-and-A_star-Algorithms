@@ -1,7 +1,5 @@
 from typing import List
 
-import target as target
-
 
 class Node:
     def __init__(self, name: str, location: (int, int)):
@@ -20,6 +18,7 @@ class Node:
 def dijkstra(s: Node, graph: List[Node]):
     is_visited = dict()
     node_distances = dict()
+    back_track = dict()
     pq = []
     for node in graph:
         node_distances[node.name] = float("inf")
@@ -31,14 +30,47 @@ def dijkstra(s: Node, graph: List[Node]):
         pq.remove(current)
         is_visited[current.name] = True
         for node in current.neighbors:
-            # if node_distances[i] > node_distances[name] + name.neighbors_weight[i]:
-            #     node_distances[i] = node_distances[name] + name.neighbors_weight[i]
-            node_distances[node.name] = min(node_distances[current.name] + current.neighbors_weight[node],
-                                            node_distances[node.name])
+            if node_distances[node.name] > node_distances[current.name] + current.neighbors_weight[node]:
+                node_distances[node.name] = node_distances[current.name] + current.neighbors_weight[node]
+                back_track[node.name] = current.name
+            # node_distances[node.name] = min(node_distances[current.name] + current.neighbors_weight[node],
+            #                                 node_distances[node.name])
             if not is_visited[node.name]:
                 pq.append(node)
         pq.sort(key=lambda node: node_distances[node.name])
-    return node_distances
+    return node_distances, back_track
+
+
+def oclidian_distance(a: (int, int), b: (int, int)):
+    return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5
+
+
+def a_star(s: Node, t: Node, graph: List[Node]):
+    is_visited = dict()
+    node_distances = dict()
+    back_track = dict()
+    pq = []
+    for node in graph:
+        node_distances[node.name] = float("inf")
+        is_visited[node.name] = False
+    node_distances[s.name] = 0
+    pq.append(s)
+    while len(pq) != 0:
+        current = pq[0]
+        pq.remove(current)
+        is_visited[current.name] = True
+        for node in current.neighbors:
+            if node_distances[node.name] > node_distances[current.name] + current.neighbors_weight[node]:
+                node_distances[node.name] = node_distances[current.name] + current.neighbors_weight[node]
+                back_track[node.name] = current.name
+            # node_distances[node.name] = min(node_distances[current.name] + current.neighbors_weight[node],
+            #                                 node_distances[node.name])
+            if current == t:
+                return node_distances, back_track
+            if not is_visited[node.name]:
+                pq.append(node)
+        pq.sort(key=lambda node: node_distances[node.name] + oclidian_distance(node.location, t.location))
+    return node_distances, back_track
 
 
 def main():
@@ -61,10 +93,28 @@ def main():
     c.connect_nodes(e, 1)
 
     d.connect_nodes(e, 5)
-    distances = dijkstra(s, [s, a, b, c, d, e])
+
+    distances, back_track = a_star(s, e, [s, a, b, c, d, e])
+    print("a_star algo:")
     for i in distances:
         print(i, distances[i])
-    # print(dijkstra(s, e, [s, a, b, c, d, e]))
+    if e.name in back_track:
+        node = e.name
+        while node != s.name:
+            print(f"{node}", end="<-")
+            node = back_track[node]
+        print(s.name)
+    distances, back_track = dijkstra(s, [s, a, b, c, d, e])
+    print("dijkstra algo:")
+    for i in distances:
+        print(i, distances[i])
+    if e.name in back_track:
+        node = e.name
+        while node != s.name:
+            print(f"{node}", end="<-")
+            node = back_track[node]
+        print(s.name)
+
 
 
 if __name__ == "__main__":
